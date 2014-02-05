@@ -117,7 +117,7 @@ c	Circ Res 1996;79:208-221
 
 	nnn = 2
 
-c        write(6,*) ' start program'
+c       write(6,*) ' start program'
 c	Cell Geometry
 c 	Dimensions:Length(L)=100 micrometer,Radius(r)=11 micrometer
 	Length=0.0001
@@ -575,7 +575,7 @@ c 	Initial Conditions
 c       output files
         open(20,file='time.dat',status='unknown')
         open(21,file='vm.dat',status='unknown')
-        open(22,file='ca.dat',status='unknown')
+c       open(22,file='ca.dat',status='unknown')
 
 c***********************************************************************
 c	Time loop
@@ -939,8 +939,8 @@ c*******************************************************************************
 	  iflag3=1
 	  apdflag = 0
 
-	Write(23,*) tmax(i,j)/1000,apd,nai(i,j),ki(i,j),ke(i,j),Inak(i,j),
-     &              vm(i,j),Ikatp(i,j),vcleft,vdotmax(i,j)
+c	Write(23,*) tmax(i,j)/1000,apd,nai(i,j),ki(i,j),ke(i,j),Inak(i,j),
+c    &              vm(i,j),Ikatp(i,j),vcleft,vdotmax(i,j)
      
             
 	   end if
@@ -969,7 +969,7 @@ c
 	    tdvdtmax = k*dt
             iclock(i,j) = 1
             clock(i,j) = 0.
-            write(6,*) ' dvdtmax now ',k*dt,i,j
+c           write(6,*) ' dvdtmax now ',k*dt,i,j
 
           end if
          end if
@@ -984,7 +984,7 @@ c
 	
            If (dcaitwo(i,j).gt.dcaith) then
               grelcicrbar(i,j)= 60.
-              write(6,*) ' cicr!!!!!!', k*dt,i,j
+c             write(6,*) ' cicr!!!!!!', k*dt,i,j
 
            else 
              grelcicrbar(i,j)=0.
@@ -1072,8 +1072,8 @@ c	state conditions taken from appendix 1 of Zeng et al 1995 paper
 	 j = 1
  
 c	 write(6,*) time, vmnew(i,j)
-	 write(6,*)time,vmnew(i,j), ke(i,j), Nai(i,j), Ki(i,j)
-c         write(6,*)vmnew(i,j), m1(i,j), jj(i,j), h(i,j),d(i,j), f(i,j)
+c	 write(6,*)time,vmnew(i,j), ke(i,j), Nai(i,j), Ki(i,j)
+c        write(6,*)vmnew(i,j), m1(i,j), jj(i,j), h(i,j),d(i,j), f(i,j)
 c	 write(6,*) 5,nai(i,j), ki(i,j), cai(i,j), nsr(i,j),jsr(i,j),Irelcicr
 c        write(6,1000) time
 
@@ -1081,28 +1081,28 @@ c1000       format(4096(f6.1,' '))
 
 	 
 c	Write(iout,*)time,Vmnew,INa, Ilca, Ik,Iv,Inaca,Ik1, Ikp,Inak,
-c     &              Ipca,INab,Icab,cai(i,j),jsr(i,j),nsr(i,j),trpn(i,j),cmdn(i,j),csqn(i,j),Irelcicr,
-c     &               Iup,Ileak,itr,fca
-        write(26,*) time,Vmnew(i,j),INa(i,j),Ilca(i,j),Ik(i,j),
-     &              Iv(i,j),Inaca(i,j),Ik1(i,j), Ikp(i,j),
-     &              Inak(i,j),Ipca(i,j),INab(i,j),Icab(i,j),
-     &              cai(i,j),jsr(i,j),nsr(i,j),trpn(i,j),cmdn(i,j),
-     &              csqn(i,j),Irelcicr(i,j),Iup(i,j),Ileak(i,j),
-     &              itr(i,j),fca(i,j),dvmdtnew(i,j),It(i,j)
+c    &              Ipca,INab,Icab,cai(i,j),jsr(i,j),nsr(i,j),trpn(i,j),cmdn(i,j),csqn(i,j),Irelcicr,
+c    &               Iup,Ileak,itr,fca
+c       write(26,*) time,Vmnew(i,j),INa(i,j),Ilca(i,j),Ik(i,j),
+c    &              Iv(i,j),Inaca(i,j),Ik1(i,j), Ikp(i,j),
+c    &              Inak(i,j),Ipca(i,j),INab(i,j),Icab(i,j),
+c    &              cai(i,j),jsr(i,j),nsr(i,j),trpn(i,j),cmdn(i,j),
+c    &              csqn(i,j),Irelcicr(i,j),Iup(i,j),Ileak(i,j),
+c    &              itr(i,j),fca(i,j),dvmdtnew(i,j),It(i,j)
         write(21,*) Vmnew(i,j)
 	write(20,*) time
-	write(33,*) vdotmax(i,j)
+c	write(33,*) vdotmax(i,j)
 	
-	Write(24,*) time,vmnew(i,j),Nai(i,j),ki(i,j),INa(i,j),cai(i,j),
-     &		    Inaca(i,j),Inak(i,j),Ilcana(i,j),Inab(i,j)
-        write(25,*) time, vm(i,j), nai(i,j), nae(i,j),ki(i,j), Ke(i,j), 
-     &          cai(i,j),cae(i,j),mg(i,j),atp(i,j),adp(i,j),
-     &		nsr(i,j),jsr(i,j),trpn(i,j),cmdn(i,j),csqn(i,j),
-     &          m1(i,j), h(i,j),jj(i,j),d(i,j), f(i,j), b(i,j), g(i,j),
-     &          x1(i,j),xi(i,j),xr(i,j),xs(i,j)
-	write(30,*)time,vmnew(i,j),dvmdtnew(i,j),vdotmax(i,j),nai(i,j),
-     &            Ke(i,j),cai(i,j),Irelcicr(i,j),clock(i,j),iclock(i,j),
-     &            dvmdtold(i,j)
+c	Write(24,*) time,vmnew(i,j),Nai(i,j),ki(i,j),INa(i,j),cai(i,j),
+c    &		    Inaca(i,j),Inak(i,j),Ilcana(i,j),Inab(i,j)
+c       write(25,*) time, vm(i,j), nai(i,j), nae(i,j),ki(i,j), Ke(i,j), 
+c    &          cai(i,j),cae(i,j),mg(i,j),atp(i,j),adp(i,j),
+c    &		nsr(i,j),jsr(i,j),trpn(i,j),cmdn(i,j),csqn(i,j),
+c    &          m1(i,j), h(i,j),jj(i,j),d(i,j), f(i,j), b(i,j), g(i,j),
+c    &          x1(i,j),xi(i,j),xr(i,j),xs(i,j)
+c       write(30,*)time,vmnew(i,j),dvmdtnew(i,j),vdotmax(i,j),nai(i,j),
+c    &            Ke(i,j),cai(i,j),Irelcicr(i,j),clock(i,j),iclock(i,j),
+c    &            dvmdtold(i,j)
 
 	  end if
 

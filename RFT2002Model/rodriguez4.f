@@ -15,11 +15,18 @@ c	Circ Res 1995;77:140-152
 c	Am J Physiol Heart Circ Physiol 2002; 283:H490-H500
 c	Circ Res 1996;79:208-221
 
+c********************************************************************
+c       variables to be set by parameter file (TODO)
+c********************************************************************
+c       pacing interval (ms)
+        integer pintvl
+c********************************************************************
+
         integer, parameter :: VMFILE=21
         integer, parameter :: APDFILE=20
 
         character :: sep=","
-	integer m,n,nn
+	integer k,idt,m,n,nn
 	parameter(nn = 101)
 	double precision Vcell,Ageo,Acap,Vmyo,Vmito,Vsr, Vnsr,Vjsr,Vcleft
 	double precision vcleftinitial, vcleftfinal,vdotmax(nn,nn)
@@ -165,6 +172,7 @@ c	vdotmax...  Max dvmdt
 c***********************************
 c	Time steps
 c***********************************
+c       idt... steps per time unit (1/ms)
 c	dt... time steps (ms)
 c	t... total time (ms)
 c	taudiff... time constant for diffusion of ions from the interstitial
@@ -177,8 +185,9 @@ c	stim... Stimulus current (uA/cm^2)
 c	tstim... time stimulus is applied (ms)
 c	stimtime... time period during which stimulus is applied
 c	it... total current (uA/cm^2)
-c	is1s... starting time of first stimulus
+c	is1s... starting time of first stimulus 
 c	is1e... ending time of first stimulus
+c       pintvl... pacing interval (ms)
 
 c***********************************************************
 c 	Standard ionic Concentration
@@ -516,12 +525,14 @@ c	tautr... time const. of Ca transfer from NSR to JSR (ms)
 c*****************************************************************************		
 
 c 	Time loop conditions
-	dt = 0.01
-	nt = 30000*3600
+        idt = 100
+	dt  = 1./idt
+	nt  = 30000*3600
 	tstim = 10
 
 	is1s = 0
 	is1e = 500
+        pintvl = 500
 
         S1     =  -14
         S2     =  500*0
@@ -594,12 +605,12 @@ c********************************************************************
 c       stimulus code
 c********************************************************************
 c       at the start of stimulus
-        if(MOD((k-is1s),50000).eq.0) then
+        if(MOD((k-is1s),pintvl*idt).eq.0) then
           vrest = vmnew(i,j)
         end if
 
 c       during the stimulus
-        if(k.gt.is1s.and.MOD((k-is1s),50000).lt.(is1e-is1s)) then
+        if(k.gt.is1s.and.MOD(k-is1s,pintvl*idt).lt.(is1e-is1s)) then
           iflag1 = 0
           iflag2 = 0
           iflag3 = 0

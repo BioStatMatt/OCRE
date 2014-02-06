@@ -15,7 +15,10 @@ c	Circ Res 1995;77:140-152
 c	Am J Physiol Heart Circ Physiol 2002; 283:H490-H500
 c	Circ Res 1996;79:208-221
 
+        integer, parameter :: VMFILE=21
+        integer, parameter :: APDFILE=20
 
+        character :: sep=","
 	integer m,n,nn
 	parameter(nn = 101)
 	double precision Vcell,Ageo,Acap,Vmyo,Vmito,Vsr, Vnsr,Vjsr,Vcleft
@@ -573,9 +576,10 @@ c 	Initial Conditions
 	      iclock1(i,j) = 0
 	      	    
 c       output files
-        open(20,file='time.dat',status='unknown')
-        open(21,file='vm.dat',status='unknown')
-c       open(22,file='ca.dat',status='unknown')
+        open(APDFILE,file='apd.csv',status='unknown')
+        open(VMFILE,file='vm.csv',status='unknown')
+        write(VMFILE, '(A15,A1,A15,A1,A15)') 'time_ms',sep,'voltage_mV',
+     &         sep,'dVdt_mVms'
 
 c***********************************************************************
 c	Time loop
@@ -884,9 +888,9 @@ c	Calculation of total independent currents
 	it(i,j) = Naiont(i,j) + Kiont(i,j) + Caiont(i,j)
 
 
-c********************************************************************************
+c**************************************************************************************
 c	Functions that calculate intracellualr & extracellular ion concentrations 
-c*********************************************************************************
+c**************************************************************************************
 
 	dNai(i,j) = -dt*((Naiont(i,j)+INaH)*Acap)/(Vmyo*zNa*frdy)
 	nai(i,j)  =  dNai(i,j) + nai(i,j)
@@ -910,37 +914,35 @@ c*******************************************************************************
 c	Main formula for Vm
 c**************************************************************************************
 	Vmnew(i,j) = vm(i,j) - (it(i,j) + istim(i,j))*dt
-
 	dvmdtnew(i,j) = (vmnew(i,j) - vm(i,j))/dt	
-		
-*************************************************************************
-	
+c**************************************************************************************
+
+c       apdflag == 0 indicates 
 	If (apdflag.eq.0) then
-	 If (k.gt.is1s) then
-	   If(vmnew(i,j).lt.vm(i,j).and.iflag2.eq.0) then
-            tmax(i,j) = k*dt
-            vpeak(i,j)=vmnew(i,j)
+	  If (k.gt.is1s) then
+	    If(vmnew(i,j).lt.vm(i,j).and.iflag2.eq.0) then
+              tmax(i,j) = (k-1)*dt
+              vpeak(i,j)= vm(i,j)
 
-	  iflag2=1
-	  apdflag = 1
+	      iflag2=1
+	      apdflag = 1
 
-	   end if
+	    end if
 	  end if
-	 end if
+	end if
  	
 	
 	if (apdflag.eq.1) then
-	if(k.gt.is1e+400) then
-        if(vmnew(i,j).lt.(vrest + (vpeak(i,j)-vrest)*0.1).and.
+	  if(k.gt.is1e+400) then
+            if(vmnew(i,j).lt.(vrest + (vpeak(i,j)-vrest)*0.1).and.
      &            iflag3.eq.0) then
-            Apd=k*dt-tmax(i,j)
+              Apd=k*dt-tmax(i,j)
 	
-	  iflag1=1
-	  iflag3=1
-	  apdflag = 0
+	      iflag1=1
+	      iflag3=1
+	      apdflag = 0
 
-c	Write(23,*) tmax(i,j)/1000,apd,nai(i,j),ki(i,j),ke(i,j),Inak(i,j),
-c    &              vm(i,j),Ikatp(i,j),vcleft,vdotmax(i,j)
+	      write(APDFILE,*) tmax(i,j),apd,vdotmax(i,j)
      
             
 	   end if
@@ -1067,52 +1069,26 @@ c	state conditions taken from appendix 1 of Zeng et al 1995 paper
            if(icount.eq.ioutput) then
               iout=iout+1
               icount=0
-         time=k*dt
-	 i = 1
-	 j = 1
- 
-c	 write(6,*) time, vmnew(i,j)
-c	 write(6,*)time,vmnew(i,j), ke(i,j), Nai(i,j), Ki(i,j)
-c        write(6,*)vmnew(i,j), m1(i,j), jj(i,j), h(i,j),d(i,j), f(i,j)
-c	 write(6,*) 5,nai(i,j), ki(i,j), cai(i,j), nsr(i,j),jsr(i,j),Irelcicr
-c        write(6,1000) time
+              time=k*dt
+	      i = 1
+	      j = 1
 
-c1000       format(4096(f6.1,' '))
-
-	 
-c	Write(iout,*)time,Vmnew,INa, Ilca, Ik,Iv,Inaca,Ik1, Ikp,Inak,
-c    &              Ipca,INab,Icab,cai(i,j),jsr(i,j),nsr(i,j),trpn(i,j),cmdn(i,j),csqn(i,j),Irelcicr,
-c    &               Iup,Ileak,itr,fca
-c       write(26,*) time,Vmnew(i,j),INa(i,j),Ilca(i,j),Ik(i,j),
+c            write(26,*) time,Vmnew(i,j),INa(i,j),Ilca(i,j),Ik(i,j),
 c    &              Iv(i,j),Inaca(i,j),Ik1(i,j), Ikp(i,j),
 c    &              Inak(i,j),Ipca(i,j),INab(i,j),Icab(i,j),
 c    &              cai(i,j),jsr(i,j),nsr(i,j),trpn(i,j),cmdn(i,j),
 c    &              csqn(i,j),Irelcicr(i,j),Iup(i,j),Ileak(i,j),
 c    &              itr(i,j),fca(i,j),dvmdtnew(i,j),It(i,j)
-        write(21,*) Vmnew(i,j)
-	write(20,*) time
-c	write(33,*) vdotmax(i,j)
-	
-c	Write(24,*) time,vmnew(i,j),Nai(i,j),ki(i,j),INa(i,j),cai(i,j),
-c    &		    Inaca(i,j),Inak(i,j),Ilcana(i,j),Inab(i,j)
-c       write(25,*) time, vm(i,j), nai(i,j), nae(i,j),ki(i,j), Ke(i,j), 
-c    &          cai(i,j),cae(i,j),mg(i,j),atp(i,j),adp(i,j),
-c    &		nsr(i,j),jsr(i,j),trpn(i,j),cmdn(i,j),csqn(i,j),
-c    &          m1(i,j), h(i,j),jj(i,j),d(i,j), f(i,j), b(i,j), g(i,j),
-c    &          x1(i,j),xi(i,j),xr(i,j),xs(i,j)
-c       write(30,*)time,vmnew(i,j),dvmdtnew(i,j),vdotmax(i,j),nai(i,j),
-c    &            Ke(i,j),cai(i,j),Irelcicr(i,j),clock(i,j),iclock(i,j),
-c    &            dvmdtold(i,j)
 
-	  end if
+             write(VMFILE,'(F15.2,A1,ES15.3E3,A1,ES15.3E3)') time,sep,
+     &              vmnew(i,j),sep,dvmdtnew(i,j)
+	   end if
 
 c	End of time loop
 	end do
 
-c       close files
-        close(20)
-        close(21)
-        close(22)
+        close(VMFILE)
+        close(APDFILE)
 
 	Stop 
 	End

@@ -590,27 +590,24 @@ c	Time loop
 
 	Istim(i,j) = 0
 	  
-c***************************************************************	
-	  do n = 1, 3600
+c********************************************************************
+c       stimulus code
+c********************************************************************
+c       at the start of stimulus
+        if(MOD((k-is1s),50000).eq.0) then
+          vrest = vmnew(i,j)
+        end if
 
-            if(k.eq.(is1s+(n-1)*50000)) then
-                vrest = vmnew(i,j)
-                end if
-
-            if(k.gt.(is1s+(n-1)*50000).and.
-     &         k.lt.(is1e+(n-1)*50000)) then
-
-	    iflag1 = 0
-	    iflag2 = 0
-	    iflag3 = 0
-            clock(i,j) = 0
-	    iclock1(i,j) = 0
-
-    	    Istim(i,j) = S1
-	        
-           end if
-	  end do
-c*************************************************************
+c       during the stimulus
+        if(k.gt.is1s.and.MOD((k-is1s),50000).lt.(is1e-is1s)) then
+          iflag1 = 0
+          iflag2 = 0
+          iflag3 = 0
+          clock(i,j) = 0
+          iclock1(i,j) = 0
+          istim(i,j) = S1
+        endif
+c********************************************************************
 
 	if (k.lt.60*50000) then
 	    taudiff = 1000

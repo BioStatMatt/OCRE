@@ -611,7 +611,6 @@ c       at the start of stimulus
 
 c       during the stimulus
         if(k.gt.is1s.and.MOD(k-is1s,pintvl*idt).lt.(is1e-is1s)) then
-          iflag1 = 0
           iflag2 = 0
           iflag3 = 0
           clock(i,j) = 0
@@ -946,7 +945,6 @@ c       apdflag == 0 indicates
      &            iflag3.eq.0) then
               Apd=k*dt-tmax(i,j)
 	
-	      iflag1=1
 	      iflag3=1
 	      apdflag = 0
 

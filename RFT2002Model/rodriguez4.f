@@ -527,7 +527,7 @@ c*****************************************************************************
 c 	Time loop conditions
         idt = 100
 	dt  = 1./idt
-	nt  = 30000*3600
+	nt  = 300*3600
 	tstim = 10
 
 	is1s = 0
@@ -589,8 +589,11 @@ c 	Initial Conditions
 c       output files
         open(APDFILE,file='apd.csv',status='unknown')
         open(VMFILE,file='vm.csv',status='unknown')
-        write(VMFILE, '(A15,A1,A15,A1,A15)') 'time_ms',sep,'voltage_mV',
-     &         sep,'dVdt_mVms'
+c        write(VMFILE, '(A15,A1,A15,A1,A15)') 'time_ms',sep,'voltage_mV',
+c     &         sep,'dVdt_mVms'
+
+        iflag2 = 0
+        iflag3 = 0
 
 c***********************************************************************
 c	Time loop
@@ -607,12 +610,12 @@ c********************************************************************
 c       at the start of stimulus
         if(MOD((k-is1s),pintvl*idt).eq.0) then
           vrest = vmnew(i,j)
+          iflag2 = 0
+          iflag3 = 0
         end if
 
 c       during the stimulus
         if(k.gt.is1s.and.MOD(k-is1s,pintvl*idt).lt.(is1e-is1s)) then
-          iflag2 = 0
-          iflag3 = 0
           clock(i,j) = 0
           iclock1(i,j) = 0
           istim(i,j) = S1
@@ -924,36 +927,31 @@ c*********************************************************************
 	dvmdtnew(i,j) = (vmnew(i,j) - vm(i,j))/dt	
 c*********************************************************************
 
-c       apdflag == 0 indicates 
-	If (apdflag.eq.0) then
-	  If (k.gt.is1s) then
-	    If(vmnew(i,j).lt.vm(i,j).and.iflag2.eq.0) then
-              tmax(i,j) = (k-1)*dt
+c*********************************************************************
+c	APD 90
+c*********************************************************************
+	if(iflag2.eq.0) then
+	  if(k.gt.is1s) then
+	    if(vmnew(i,j).lt.vm(i,j)) then
+              tmax(i,j) = k*dt
               vpeak(i,j)= vm(i,j)
-
 	      iflag2=1
-	      apdflag = 1
-
 	    end if
 	  end if
 	end if
  	
 	
-	if (apdflag.eq.1) then
+	if((iflag2.eq.1).and.(iflag3.eq.0)) then
 	  if(k.gt.is1e+400) then
-            if(vmnew(i,j).lt.(vrest + (vpeak(i,j)-vrest)*0.1).and.
-     &            iflag3.eq.0) then
+            if(vmnew(i,j).lt.(vrest + (vpeak(i,j)-vrest)*0.1)) then
               Apd=k*dt-tmax(i,j)
-	
 	      iflag3=1
-	      apdflag = 0
-
-	      write(APDFILE,*) tmax(i,j),apd,vdotmax(i,j)
-     
-            
-	   end if
+	      write(APDFILE,'(F15.2,A1,ES15.3E3,A1,ES15.3E3)')
+     &              tmax(i,j),sep,apd,sep,vdotmax(i,j)
+	    end if
 	  end if
 	end if
+c*********************************************************************
 	
 	
 c*************************************************************************
@@ -1086,8 +1084,8 @@ c    &              cai(i,j),jsr(i,j),nsr(i,j),trpn(i,j),cmdn(i,j),
 c    &              csqn(i,j),Irelcicr(i,j),Iup(i,j),Ileak(i,j),
 c    &              itr(i,j),fca(i,j),dvmdtnew(i,j),It(i,j)
 
-             write(VMFILE,'(F15.2,A1,ES15.3E3,A1,ES15.3E3)') time,sep,
-     &              vmnew(i,j),sep,dvmdtnew(i,j)
+c             write(VMFILE,'(F15.2,A1,ES15.3E3,A1,ES15.3E3)') time,sep,
+c     &              vmnew(i,j),sep,dvmdtnew(i,j)
 	   end if
 
 c	End of time loop

@@ -3,8 +3,9 @@
 c	Rodriguez et al.'s implementation on Luo-Rudy Dynamics (LRD) Model 
 
 c	Author: Sunil M Kandel
-c	Date: 12/20/2013
-c	Purpose: to study the role on the ischemic increase of Ke during acute 
+c       Author: Matthew S Shotwell
+c	Date (initial implementation): 12/20/2013
+c	Purpose: to study the role on the ischemic increase of Ke during acute
 c	myocardial ischemia
 
 c 	Detailed list of equations and model description are providedd in
@@ -20,7 +21,19 @@ c       variables to be set by parameter file (TODO)
 c********************************************************************
 c       pacing interval (ms)
         integer pintvl
+c       simulation length (ms)
+        integer simlen
+c       start of first ischemia (ms)
+        integer  isch1s
+        integer kisch1s
+c       end of first ischemis (ms)
+        integer  isch1e
+        integer kisch1e
 c********************************************************************
+
+c       minutes in dt units
+        integer k14min
+        integer k2min
 
         integer, parameter :: VMFILE=21
         integer, parameter :: APDFILE=20
@@ -188,6 +201,9 @@ c	it... total current (uA/cm^2)
 c	is1s... starting time of first stimulus 
 c	is1e... ending time of first stimulus
 c       pintvl... pacing interval (ms)
+c       simlen... simulation length (ms)
+c       isch1s... start of first ischemia (ms)
+c       isch1e... end of first ischemis (ms)
 
 c***********************************************************
 c 	Standard ionic Concentration
@@ -525,10 +541,20 @@ c	tautr... time const. of Ca transfer from NSR to JSR (ms)
 c*****************************************************************************		
 
 c 	Time loop conditions
+c       simulation length: 30 min
+        simlen = 30 * 60 * 1000
         idt = 100
 	dt  = 1./idt
-	nt  = 300*3600
+	nt  = simlen * idt
 	tstim = 10
+
+c       ischemia start and stop times (ms)
+        isch1s = 30 * 1000
+        kisch1s = isch1s * idt
+        isch1e = simlen
+        kisch1e = isch1e * idt
+        k14min = 14 * 60 * 1000 * idt
+        k2min  = 2  * 60 * 1000 * idt
 
 	is1s = 0
 	is1e = 500
@@ -588,7 +614,10 @@ c 	Initial Conditions
 	      	    
 c       output files
         open(APDFILE,file='apd.csv',status='unknown')
-        open(VMFILE,file='vm.csv',status='unknown')
+        write(APDFILE, '(A15,A1,A15,A1,A15)') 'time_ms',sep,'APD_ms',
+     &         sep,'dVdtMax_mVms'
+
+c        open(VMFILE,file='vm.csv',status='unknown')
 c        write(VMFILE, '(A15,A1,A15,A1,A15)') 'time_ms',sep,'voltage_mV',
 c     &         sep,'dVdt_mVms'
 
@@ -622,17 +651,17 @@ c       during the stimulus
         endif
 c********************************************************************
 
-	if (k.lt.60*50000) then
+	if (k.lt.(kisch1s)) then
 	    taudiff = 1000
 	    fatpfactor = 0
 	    finhib = 0
 	    vcleft = vcleftinitial
 
-	else if (k.gt.60*50000.and.k.lt.(60*50000+14*6e6)) then
+	else if (k.gt.(kisch1s).and.k.lt.(kisch1s+k14min)) then
 	    taudiff = 100e6
-	    fatpfactor =((k-60*50000)/(14*6e6-60*50000))*fatpfinal
-	    finhib = ((k-60*50000)/(14*6e6-60*50000))*finhibfinal
-	    vcleft = vcleftinitial-((k-60*50000)/(14*6e6-60*50000))*
+	    fatpfactor =((k-kisch1s)/(k14min-kisch1s))*fatpfinal
+	    finhib = ((k-kisch1s)/(k14min-kisch1s))*finhibfinal
+	    vcleft = vcleftinitial-((k-kisch1s)/(k14min-kisch1s))*
      &                    (vcleftinitial-vcleftfinal)
 	    
 	else 
@@ -643,10 +672,11 @@ c********************************************************************
 	   
 	end if
 
-	if (k.lt.300*50000) then
+	if (k.lt.(kisch1s+k2min)) then
 	    Inasfinal = 0
-	else if (k.gt.300*50000.and.k.lt.(300*50000+12*6e6)) then
- 	    Inasfinal = ((k-300*50000)/(14.5*6e6-300*50000))*(-1.2)
+	else if (k.gt.(kisch1s+k2min).and.k.lt.(kisch1s+k14min)) then
+ 	    Inasfinal = ((k-(kisch1s+k2min))/
+     &                    ((kisch1s+k14min)-(kisch1s+k2min)))*(-1.2)
 	else 
 	    Inasfinal = -1.2
  	end if

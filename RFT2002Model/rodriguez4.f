@@ -34,6 +34,8 @@ c********************************************************************
 c       minutes in dt units
         integer k14min
         integer k2min
+      
+        double precision convtemp
 
         integer, parameter :: VMFILE=21
         integer, parameter :: APDFILE=20
@@ -657,12 +659,13 @@ c********************************************************************
 	    finhib = 0
 	    vcleft = vcleftinitial
 
-	else if (k.gt.(kisch1s).and.k.lt.(kisch1s+k14min)) then
+	else if (k.ge.(kisch1s).and.k.lt.(kisch1s+k14min)) then
 	    taudiff = 100e6
-	    fatpfactor =((k-kisch1s)/(k14min-kisch1s))*fatpfinal
-	    finhib = ((k-kisch1s)/(k14min-kisch1s))*finhibfinal
-	    vcleft = vcleftinitial-((k-kisch1s)/(k14min-kisch1s))*
-     &                    (vcleftinitial-vcleftfinal)
+            convtemp = (dble(k)-kisch1s)/(k14min-kisch1s)
+	    fatpfactor = convtemp * fatpfinal
+	    finhib = convtemp * finhibfinal
+	    vcleft = vcleftinitial- convtemp *
+     &               (vcleftinitial-vcleftfinal)
 	    
 	else 
 	    taudiff = 100e10
@@ -674,9 +677,10 @@ c********************************************************************
 
 	if (k.lt.(kisch1s+k2min)) then
 	    Inasfinal = 0
-	else if (k.gt.(kisch1s+k2min).and.k.lt.(kisch1s+k14min)) then
- 	    Inasfinal = ((k-(kisch1s+k2min))/
-     &                    ((kisch1s+k14min)-(kisch1s+k2min)))*(-1.2)
+	else if (k.ge.(kisch1s+k2min).and.k.lt.(kisch1s+k14min)) then
+            convtemp = (dble(k)-(kisch1s+k2min))/
+     &                    ((kisch1s+k14min)-(kisch1s+k2min))
+ 	    Inasfinal = convtemp * (-1.2)
 	else 
 	    Inasfinal = -1.2
  	end if

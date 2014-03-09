@@ -39,6 +39,7 @@ c       minutes in dt units
 
         integer, parameter :: VMFILE=21
         integer, parameter :: APDFILE=20
+        integer, parameter :: IPAFILE=22
 
         character :: sep=","
 	integer k,idt,m,n,nn
@@ -619,6 +620,11 @@ c       output files
         write(APDFILE, '(A15,A1,A15,A1,A15)') 'time_ms',sep,'APD_ms',
      &         sep,'dVdtMax_mVms'
 
+        open(IPAFILE,file='ipa.csv',status='unknown')
+        write(IPAFILE, '(A15,A1,A15,A1,A15,A1,A15,A1,A15,A1,A15)')
+     &          'time_ms',sep,'taudiff',sep,'fatpfactor',sep,
+     &          'finhib',sep,'vcleft',sep,'inasfinal'
+
 c        open(VMFILE,file='vm.csv',status='unknown')
 c        write(VMFILE, '(A15,A1,A15,A1,A15)') 'time_ms',sep,'voltage_mV',
 c     &         sep,'dVdt_mVms'
@@ -982,6 +988,11 @@ c*********************************************************************
 	      iflag3=1
 	      write(APDFILE,'(F15.2,A1,ES15.3E3,A1,ES15.3E3)')
      &              tmax(i,j),sep,apd,sep,vdotmax(i,j)
+              write(IPAFILE, '(F15.2,A1,ES15.3E3,A1,ES15.3E3,A1,
+     &              ES15.3E3,A1,ES15.3E3,A1,ES15.3E3)')
+     &              k*dt,sep,taudiff,sep,fatpfactor,sep,
+     &              finhib,sep,vcleft,sep,inasfinal
+
 	    end if
 	  end if
 	end if

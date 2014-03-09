@@ -1,0 +1,24 @@
+\documentclass[]{article}
+\usepackage{hyperref}
+\usepackage{verbatim}
+\usepackage[margin=1in]{geometry}
+\begin{document}
+\begin{ceter}
+{\Large Rodruguez Model Notes}\vspace{0.5cm}
+Matthew S. Shotwell
+Last updated: \today
+
+\section*{Original Ischemia Details (commit \verb+5a98cb9b+)}
+The \verb+rodriguez4.f+ code implements ischemia by modifying four model parameters: \verb+taudiff+, \verb+fatpfactor+, \verb+finhib+, and \verb+vcleft+. In the original code, the start of ischemia was hard-coded at $30$s, and lasts throughout the simulation. Additional changes take place at $2$min and $14$min following ischemia. The parameter \verb+taudiff+ initially takes the value $100$ (diffusion constant units?), changing to $100e^6$ at the start of ischemia, and finally taking the value $100e^10$ at $14$min afterward.  
+
+<<fig=TRUE, echo=FALSE>>=
+plot(c(2,16), c(log(100), log(100e6)), pch=16,
+     xlab="Time (min)", ylab="taudiff", xlim=c(0,18),
+     ylim=c(log(100), log(100e10)))
+points(c(2,16), c(log(100e6), log(100e10)), pch=1)
+segments(x0=c(0, 2, 16), y0=log(c(100, 100e6, 100e10)),
+         x1=c(2, 16, 100), y1=log(c(100, 100e6, 100e10)))
+
+@
+\end{center}
+\end{document}

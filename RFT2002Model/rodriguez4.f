@@ -663,7 +663,7 @@ c********************************************************************
      &           k.lt.(kisch1s+k14min).and.
      &           k.lt.(kisch1e)) then
 	    taudiff = 100e6
-            convtemp = (dble(k)-kisch1s)/(k14min-kisch1s)
+            convtemp = (dble(k)-kisch1s)/(k14min)
 	    fatpfactor = convtemp * fatpfinal
 	    finhib = convtemp * finhibfinal
 	    vcleft = vcleftinitial- convtemp *

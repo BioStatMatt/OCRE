@@ -659,7 +659,9 @@ c********************************************************************
 	    finhib = 0
 	    vcleft = vcleftinitial
 
-	else if (k.ge.(kisch1s).and.k.lt.(kisch1s+k14min)) then
+	else if (k.ge.(kisch1s).and.
+     &           k.lt.(kisch1s+k14min).and.
+     &           k.lt.(kisch1e)) then
 	    taudiff = 100e6
             convtemp = (dble(k)-kisch1s)/(k14min-kisch1s)
 	    fatpfactor = convtemp * fatpfinal

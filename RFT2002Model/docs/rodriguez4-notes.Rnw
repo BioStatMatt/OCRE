@@ -3,57 +3,92 @@
 \usepackage{verbatim}
 \usepackage[margin=1in]{geometry}
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 \begin{center}
 {\Large Rodruguez Model Notes}\vspace{0.5cm}\\
 Matthew S. Shotwell\\
 Last updated: \today
 \end{center}
 \section*{Original Ischemia Details (commit {\tt 5a98cb9b})}
-The {\tt rodriguez4.f} code implements ischemia by modifying five model parameters: {\tt taudiff}, {\tt fatpfactor}, {\tt finhib}, {\tt vcleft}, and {\tt inasfinal}. In the original code, the start of ischemia was hard-coded at $30$s, and lasts throughout the simulation. Additional changes take place at $2$min and $14$min following ischemia. The parameter {\tt taudiff} initially takes the value $100e^1$ (diffusion constant units?), changing to $100e^6$ at the start of ischemia, and finally taking the value $100e^{10}$ at $14$min afterward.  Both {\tt fatpfactor} and {\tt finhib} are initially zero, increasing linearly to {\tt fatpfinal} and {\tt finhibfinal}, respectively, at $14$min after the start of ischemia. The parameter {\tt vcleft} takes a nonzero initial value {\tt vcleftinitial}, and decreases linearly to {\tt vcleftfinal} after $14$min of ischemia. After two minutes of ischemia, the parameter {\tt inasfinal} decreases linearly from zero to the value $-1.2$ (inward current) at $14$min after the start of ischemia. Figure \ref{fig:origisc} illustrates the original ischemia timecourse for each of these parameters. Figure \ref{fig:origapd}
-
+The {\tt rodriguez4.f} code implements ischemia by modifying five model parameters: {\tt taudiff}, {\tt fatpfactor}, {\tt finhib}, {\tt vcleft}, and {\tt inasfinal}. In the original code, the start of ischemia was hard-coded at $30$s, and lasts throughout the simulation. Additional changes take place at $2$min and $14$min following ischemia. The parameter {\tt taudiff} initially takes the value $100e^1$ (diffusion constant units?), changing to $100e^6$ at the start of ischemia, and finally taking the value $100e^{10}$ at $14$min afterward.  Both {\tt fatpfactor} and {\tt finhib} are initially zero, increasing linearly to {\tt fatpfinal} and {\tt finhibfinal}, respectively, at $14$min after the start of ischemia. The parameter {\tt vcleft} takes a nonzero initial value {\tt vcleftinitial}, and decreases linearly to {\tt vcleftfinal} after $14$min of ischemia. After two minutes of ischemia, the parameter {\tt inasfinal} decreases linearly from zero to the value $-1.2$ (inward current) at $14$min after the start of ischemia. Figure \ref{fig:origisc} illustrates the original ischemia timecourse for each of these parameters, and the resulting action potential duration (to 90\% repolarization). 
 \begin{figure}
 \begin{center}
 <<fig=TRUE, echo=FALSE>>=
-layout(matrix(c(1,2,3,4),2,2,byrow=TRUE))
-
-# taudiff
-plot(c(0.5,14.5), c(log10(100e1), log10(100e6)), pch=16,
+dat_ipa <- read.csv(xzfile("original-ipa.csv.xz"))
+dat_apd <- read.csv(xzfile("original-apd.csv.xz"))
+layout(matrix(1:6,3,2,byrow=TRUE))
+par(mar = c(4.1,4.1,1.1,2.1))
+plot(dat_ipa$time_ms/1000/60,
+     log10(dat_ipa$taudiff), 
      xlab="Time (min)",
      ylab=expression(log[10](taudiff)),
-     xlim=c(0,16),
-     ylim=log10(c(100e1, 100e10)))
-points(c(0.5,14.5), log10(c(100e6, 100e10)), pch=1)
-lines(c(0.5, 0.5), log10(c(100e1, 100e10)), lty=2)
-segments(x0=c(0, 0.5, 14.5), y0=log10(c(100e1, 100e6, 100e10)),
-         x1=c(0.5, 14.5, 100), y1=log10(c(100e1, 100e6, 100e10)))
-
-# fatpfactor, finhib
-plot(c(0,16), c(0,1), type="n",
+     type='s')
+plot(dat_ipa$time_ms/1000/60,
+     dat_ipa$fatpfactor, 
      xlab="Time (min)",
-     ylab="fatpfactor/finhib",
-     yaxt="n")
-axis(2, at=c(0,1), labels=c("0.0", "final"))
-lines(c(0.5, 0.5), c(0, 1), lty=2)
-lines(c(0, 0.5, 14.5, 100), c(0, 0, 1, 1))
-#text(x=14.5, y=1, "fatpfinal\nfinhibfinal")
-
-# vcleft
-plot(c(0,16), c(0,1), type="n",
+     ylab="fatpfactor",
+     type='s')
+plot(dat_ipa$time_ms/1000/60,
+     dat_ipa$finhib, 
+     xlab="Time (min)",
+     ylab="finhib",
+     type='s')
+plot(dat_ipa$time_ms/1000/60,
+     dat_ipa$vcleft, 
      xlab="Time (min)",
      ylab="vcleft",
-     yaxt="n")
-axis(2, at=c(0,1), labels=c("final", "initial"))
-lines(c(0.5, 0.5), c(0, 1), lty=2)
-lines(c(0, 0.5, 14.5, 100), c(1, 1, 0, 0))
-
-# inasfinal
-plot(c(0,16), c(0,1), type="n",
+     type='s')
+plot(dat_ipa$time_ms/1000/60,
+     dat_ipa$inasfinal, 
      xlab="Time (min)",
      ylab="inasfinal",
-     yaxt="n")
-axis(2, at=c(0,1), labels=c("-1.2", "0.0"))
-lines(c(0.5, 0.5), c(0, 1), lty=2)
-lines(c(0, 2.5, 14.5, 100), c(1, 1, 0, 0))
+     type='s')
+plot(dat_apd$time_ms/1000/60,
+     dat_apd$APD_ms,
+     xlab="Time (min)",
+     ylab=expression(APD[90]),
+     type="l")
+
+#layout(matrix(c(1,2,3,4),2,2,byrow=TRUE))
+#
+## taudiff
+#plot(c(0.5,14.5), c(log10(100e1), log10(100e6)), pch=16,
+#     xlab="Time (min)",
+#     ylab=expression(log[10](taudiff)),
+#     xlim=c(0,16),
+#     ylim=log10(c(100e1, 100e10)))
+#points(c(0.5,14.5), log10(c(100e6, 100e10)), pch=1)
+#lines(c(0.5, 0.5), log10(c(100e1, 100e10)), lty=2)
+#segments(x0=c(0, 0.5, 14.5), y0=log10(c(100e1, 100e6, 100e10)),
+#         x1=c(0.5, 14.5, 100), y1=log10(c(100e1, 100e6, 100e10)))
+#
+## fatpfactor, finhib
+#plot(c(0,16), c(0,1), type="n",
+#     xlab="Time (min)",
+#     ylab="fatpfactor/finhib",
+#     yaxt="n")
+#axis(2, at=c(0,1), labels=c("0.0", "final"))
+#lines(c(0.5, 0.5), c(0, 1), lty=2)
+#lines(c(0, 0.5, 14.5, 100), c(0, 0, 1, 1))
+##text(x=14.5, y=1, "fatpfinal\nfinhibfinal")
+#
+## vcleft
+#plot(c(0,16), c(0,1), type="n",
+#     xlab="Time (min)",
+#     ylab="vcleft",
+#     yaxt="n")
+#axis(2, at=c(0,1), labels=c("final", "initial"))
+#lines(c(0.5, 0.5), c(0, 1), lty=2)
+#lines(c(0, 0.5, 14.5, 100), c(1, 1, 0, 0))
+#
+## inasfinal
+#plot(c(0,16), c(0,1), type="n",
+#     xlab="Time (min)",
+#     ylab="inasfinal",
+#     yaxt="n")
+#axis(2, at=c(0,1), labels=c("-1.2", "0.0"))
+#lines(c(0.5, 0.5), c(0, 1), lty=2)
+#lines(c(0, 2.5, 14.5, 100), c(1, 1, 0, 0))
 
 @
 \end{center}

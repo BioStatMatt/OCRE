@@ -658,7 +658,6 @@ c********************************************************************
 	    fatpfactor = 0
 	    finhib = 0
 	    vcleft = vcleftinitial
-
 	else if (k.ge.(kisch1s).and.
      &           k.lt.(kisch1s+k14min).and.
      &           k.lt.(kisch1e)) then
@@ -668,23 +667,33 @@ c********************************************************************
 	    finhib = convtemp * finhibfinal
 	    vcleft = vcleftinitial- convtemp *
      &               (vcleftinitial-vcleftfinal)
-	    
-	else 
+	else if (k.ge.(kisch1s+k14min).and.
+     &           k.lt.(kisch1e)) then
 	    taudiff = 100e10
 	    fatpfactor = fatpfinal
 	    finhib = finhibfinal
 	    vcleft = vcleftfinal
-	   
+	else if (k.ge.(kisch1e)) then 
+            taudiff = 1000 
+	    fatpfactor = 0
+	    finhib = 0
+	    vcleft = vcleftinitial
 	end if
 
-	if (k.lt.(kisch1s+k2min)) then
+	if (k.lt.(kisch1s+k2min).and.
+     &      k.lt.(kisch1e)) then
 	    Inasfinal = 0
-	else if (k.ge.(kisch1s+k2min).and.k.lt.(kisch1s+k14min)) then
+	else if (k.ge.(kisch1s+k2min).and.
+     &           k.lt.(kisch1s+k14min).and.
+     &           k.lt.(kisch1e)) then
             convtemp = (dble(k)-(kisch1s+k2min))/
      &                    ((kisch1s+k14min)-(kisch1s+k2min))
  	    Inasfinal = convtemp * (-1.2)
-	else 
+	else if (k.ge.(kisch1s+k14min).and.
+     &           k.lt.(kisch1e)) then 
 	    Inasfinal = -1.2
+        else if (k.ge.(kisch1e)) then
+            Inasfinal = 0
  	end if
 
 c****************************************************************************

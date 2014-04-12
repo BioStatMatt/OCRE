@@ -553,7 +553,7 @@ c       simulation length: 20 min
 c       ischemia start and stop times (ms)
         isch1s = 30 * 1000
         kisch1s = isch1s * idt
-        isch1e = simlen
+        isch1e = 6 * 60 * 1000
         kisch1e = isch1e * idt
         k14min = 14 * 60 * 1000 * idt
         k2min  = 2  * 60 * 1000 * idt

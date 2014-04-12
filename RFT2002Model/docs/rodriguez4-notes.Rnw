@@ -9,7 +9,7 @@ Matthew S. Shotwell\\
 Last updated: \today
 \end{center}
 \section*{Original Ischemia Details (commit {\tt 5a98cb9b})}
-The {\tt rodriguez4.f} code implements ischemia by modifying five model parameters: {\tt taudiff}, {\tt fatpfactor}, {\tt finhib}, {\tt vcleft}, and {\tt inasfinal}. In the original code, the start of ischemia was hard-coded at $30$s, and lasts throughout the simulation. Additional changes take place at $2$min and $14$min following ischemia. The parameter {\tt taudiff} initially takes the value $100e^1$ (diffusion constant units?), changing to $100e^6$ at the start of ischemia, and finally taking the value $100e^{10}$ at $14$min afterward.  Both {\tt fatpfactor} and {\tt finhib} are initially zero, increasing linearly to {\tt fatpfinal} and {\tt finhibfinal}, respectively, at $14$min after the start of ischemia. The parameter {\tt vcleft} takes a nonzero initial value {\tt vcleftinitial}, and decreases linearly to {\tt vcleftfinal} after $14$min of ischemia. After two minutes of ischemia, the parameter {\tt inasfinal} decreases linearly from zero to the value $-1.2$ (inward current) at $14$min after the start of ischemia. Figure \ref{fig:iscpars} illustrates the original ischemia timecourse for each of these parameters. 
+The {\tt rodriguez4.f} code implements ischemia by modifying five model parameters: {\tt taudiff}, {\tt fatpfactor}, {\tt finhib}, {\tt vcleft}, and {\tt inasfinal}. In the original code, the start of ischemia was hard-coded at $30$s, and lasts throughout the simulation. Additional changes take place at $2$min and $14$min following ischemia. The parameter {\tt taudiff} initially takes the value $100e^1$ (diffusion constant units?), changing to $100e^6$ at the start of ischemia, and finally taking the value $100e^{10}$ at $14$min afterward.  Both {\tt fatpfactor} and {\tt finhib} are initially zero, increasing linearly to {\tt fatpfinal} and {\tt finhibfinal}, respectively, at $14$min after the start of ischemia. The parameter {\tt vcleft} takes a nonzero initial value {\tt vcleftinitial}, and decreases linearly to {\tt vcleftfinal} after $14$min of ischemia. After two minutes of ischemia, the parameter {\tt inasfinal} decreases linearly from zero to the value $-1.2$ (inward current) at $14$min after the start of ischemia. Figure \ref{fig:origisc} illustrates the original ischemia timecourse for each of these parameters. Figure \ref{fig:origapd}
 
 \begin{figure}
 \begin{center}
@@ -57,9 +57,8 @@ lines(c(0, 2.5, 14.5, 100), c(1, 1, 0, 0))
 
 @
 \end{center}
-\caption{Oringal timecourse of ischemia-dependent parameters in the model of Rodriguez et al.\label{fig:iscpars}}
+\caption{Oringal timecourse of ischemia-dependent parameters in the model of Rodriguez et al.\label{fig:origisc}}
 \end{figure}
 
-
-
+One strategy to model cardiac tissue recovery after an ischemic event is to fully and immediately revert the changes that affect the five ischemia-sensitive parameters. 
 \end{document}

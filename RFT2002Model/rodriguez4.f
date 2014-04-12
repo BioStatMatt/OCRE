@@ -543,8 +543,8 @@ c	tautr... time const. of Ca transfer from NSR to JSR (ms)
 c*****************************************************************************		
 
 c 	Time loop conditions
-c       simulation length: 30 min
-        simlen = 30 * 60 * 1000
+c       simulation length: 20 min
+        simlen = 20 * 60 * 1000
         idt = 100
 	dt  = 1./idt
 	nt  = simlen * idt

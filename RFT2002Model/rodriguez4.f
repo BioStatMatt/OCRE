@@ -29,6 +29,8 @@ c       start of first ischemia (ms)
 c       end of first ischemis (ms)
         integer  isch1e
         integer kisch1e
+c       recovery type
+        character (LEN=*), PARAMETER :: rectype="instantaneous"
 c********************************************************************
 
 c       minutes in dt units
@@ -207,6 +209,7 @@ c       pintvl... pacing interval (ms)
 c       simlen... simulation length (ms)
 c       isch1s... start of first ischemia (ms)
 c       isch1e... end of first ischemis (ms)
+c       rectype... recovery type
 
 c***********************************************************
 c 	Standard ionic Concentration
@@ -658,49 +661,59 @@ c       during the stimulus
           istim(i,j) = S1
         endif
 c********************************************************************
+        if (rectype == "instantaneous") then
+            if (k.lt.(kisch1s)) then
+	        taudiff = 1000
+	        fatpfactor = 0
+	        finhib = 0
+	        vcleft = vcleftinitial
+	    else if (k.ge.(kisch1s).and.
+     &               k.lt.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+	        taudiff = 100e6
+                convtemp = (fatpfinal-0.0)/(14*60*1000)
+                if((fatpfactor + dt * convtemp).lt.fatpfinal) then
+                    fatpfactor = fatpfactor + dt * convtemp
+                else
+                    fatpfactor = fatpfinal
+                endif
+                convtemp = (dble(k)-kisch1s)/(k14min)
+c	        fatpfactor = convtemp * fatpfinal
+	        finhib = convtemp * finhibfinal
+	        vcleft = vcleftinitial- convtemp *
+     &                  (vcleftinitial-vcleftfinal)
+	    else if (k.ge.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+	        taudiff = 100e10
+	        fatpfactor = fatpfinal
+	        finhib = finhibfinal
+	        vcleft = vcleftfinal
+	    else if (k.ge.(kisch1e)) then 
+                taudiff = 1000 
+	        fatpfactor = 0
+	        finhib = 0
+	        vcleft = vcleftinitial
+	    end if
 
-	if (k.lt.(kisch1s)) then
-	    taudiff = 1000
-	    fatpfactor = 0
-	    finhib = 0
-	    vcleft = vcleftinitial
-	else if (k.ge.(kisch1s).and.
-     &           k.lt.(kisch1s+k14min).and.
-     &           k.lt.(kisch1e)) then
-	    taudiff = 100e6
-            convtemp = (dble(k)-kisch1s)/(k14min)
-	    fatpfactor = convtemp * fatpfinal
-	    finhib = convtemp * finhibfinal
-	    vcleft = vcleftinitial- convtemp *
-     &               (vcleftinitial-vcleftfinal)
-	else if (k.ge.(kisch1s+k14min).and.
-     &           k.lt.(kisch1e)) then
-	    taudiff = 100e10
-	    fatpfactor = fatpfinal
-	    finhib = finhibfinal
-	    vcleft = vcleftfinal
-	else if (k.ge.(kisch1e)) then 
-            taudiff = 1000 
-	    fatpfactor = 0
-	    finhib = 0
-	    vcleft = vcleftinitial
-	end if
+	    if (k.lt.(kisch1s+k2min).and.
+     &          k.lt.(kisch1e)) then
+	        Inasfinal = 0
+	    else if (k.ge.(kisch1s+k2min).and.
+     &               k.lt.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+                convtemp = (dble(k)-(kisch1s+k2min))/
+     &                        ((kisch1s+k14min)-(kisch1s+k2min))
+ 	        Inasfinal = convtemp * (-1.2)
+	    else if (k.ge.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then 
+	        Inasfinal = -1.2
+            else if (k.ge.(kisch1e)) then
+                Inasfinal = 0
+ 	    end if
 
-	if (k.lt.(kisch1s+k2min).and.
-     &      k.lt.(kisch1e)) then
-	    Inasfinal = 0
-	else if (k.ge.(kisch1s+k2min).and.
-     &           k.lt.(kisch1s+k14min).and.
-     &           k.lt.(kisch1e)) then
-            convtemp = (dble(k)-(kisch1s+k2min))/
-     &                    ((kisch1s+k14min)-(kisch1s+k2min))
- 	    Inasfinal = convtemp * (-1.2)
-	else if (k.ge.(kisch1s+k14min).and.
-     &           k.lt.(kisch1e)) then 
-	    Inasfinal = -1.2
-        else if (k.ge.(kisch1e)) then
-            Inasfinal = 0
- 	end if
+c        else if (rectype == "mirror") then
+        
+c        end if
 
 c****************************************************************************
 c	Calculation of different Ionic currents in the sarcolemma

@@ -92,8 +92,93 @@ plot(dat_apd$time_ms/1000/60,
 
 @
 \end{center}
-\caption{Oringal timecourse of ischemia-dependent parameters in the model of Rodriguez et al.\label{fig:origisc}}
+\caption{Oringal timecourse of ischemia-dependent parameters and action potential duration in the model of Rodriguez et al.\label{fig:origisc}}
 \end{figure}
 
 One strategy to model cardiac tissue recovery after an ischemic event is to fully and immediately revert the changes that affect the five ischemia-sensitive parameters. 
+
+\begin{figure}
+\begin{center}
+<<fig=TRUE, echo=FALSE>>=
+dat_ipa <- read.csv(xzfile("instantaneous-ipa.csv.xz"))
+dat_apd <- read.csv(xzfile("instantaneous-apd.csv.xz"))
+layout(matrix(1:6,3,2,byrow=TRUE))
+par(mar = c(4.1,4.1,1.1,2.1))
+plot(dat_ipa$time_ms/1000/60,
+     log10(dat_ipa$taudiff), 
+     xlab="Time (min)",
+     ylab=expression(log[10](taudiff)),
+     type='s')
+plot(dat_ipa$time_ms/1000/60,
+     dat_ipa$fatpfactor, 
+     xlab="Time (min)",
+     ylab="fatpfactor",
+     type='s')
+plot(dat_ipa$time_ms/1000/60,
+     dat_ipa$finhib, 
+     xlab="Time (min)",
+     ylab="finhib",
+     type='s')
+plot(dat_ipa$time_ms/1000/60,
+     dat_ipa$vcleft, 
+     xlab="Time (min)",
+     ylab="vcleft",
+     type='s')
+plot(dat_ipa$time_ms/1000/60,
+     dat_ipa$inasfinal, 
+     xlab="Time (min)",
+     ylab="inasfinal",
+     type='s')
+plot(dat_apd$time_ms/1000/60,
+     dat_apd$APD_ms,
+     xlab="Time (min)",
+     ylab=expression(APD[90]),
+     type="l")
+
+#layout(matrix(c(1,2,3,4),2,2,byrow=TRUE))
+#
+## taudiff
+#plot(c(0.5,14.5), c(log10(100e1), log10(100e6)), pch=16,
+#     xlab="Time (min)",
+#     ylab=expression(log[10](taudiff)),
+#     xlim=c(0,16),
+#     ylim=log10(c(100e1, 100e10)))
+#points(c(0.5,14.5), log10(c(100e6, 100e10)), pch=1)
+#lines(c(0.5, 0.5), log10(c(100e1, 100e10)), lty=2)
+#segments(x0=c(0, 0.5, 14.5), y0=log10(c(100e1, 100e6, 100e10)),
+#         x1=c(0.5, 14.5, 100), y1=log10(c(100e1, 100e6, 100e10)))
+#
+## fatpfactor, finhib
+#plot(c(0,16), c(0,1), type="n",
+#     xlab="Time (min)",
+#     ylab="fatpfactor/finhib",
+#     yaxt="n")
+#axis(2, at=c(0,1), labels=c("0.0", "final"))
+#lines(c(0.5, 0.5), c(0, 1), lty=2)
+#lines(c(0, 0.5, 14.5, 100), c(0, 0, 1, 1))
+##text(x=14.5, y=1, "fatpfinal\nfinhibfinal")
+#
+## vcleft
+#plot(c(0,16), c(0,1), type="n",
+#     xlab="Time (min)",
+#     ylab="vcleft",
+#     yaxt="n")
+#axis(2, at=c(0,1), labels=c("final", "initial"))
+#lines(c(0.5, 0.5), c(0, 1), lty=2)
+#lines(c(0, 0.5, 14.5, 100), c(1, 1, 0, 0))
+#
+## inasfinal
+#plot(c(0,16), c(0,1), type="n",
+#     xlab="Time (min)",
+#     ylab="inasfinal",
+#     yaxt="n")
+#axis(2, at=c(0,1), labels=c("-1.2", "0.0"))
+#lines(c(0.5, 0.5), c(0, 1), lty=2)
+#lines(c(0, 2.5, 14.5, 100), c(1, 1, 0, 0))
+
+@
+\end{center}
+\caption{Timecourse of ischemia-dependent parameters and action potential duration with instantaneous recovery from ischemia at time six minutes, using the model of Rodriguez et al.\label{fig:instisc}}
+\end{figure}
+
 \end{document}

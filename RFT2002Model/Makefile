@@ -4,3 +4,4 @@ clean:
 	rm -f rodriguez4
 	rm -f vm.csv
 	rm -f apd.csv
+	rm -f ipa.csv

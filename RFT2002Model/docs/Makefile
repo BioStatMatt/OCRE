@@ -5,6 +5,7 @@ rodriguez4-notes.pdf:	rodriguez4-notes.Rnw
 clean:	
 	rm -rf rodriguez4-notes.log
 	rm -rf rodriguez4-notes-001.pdf
+	rm -rf rodriguez4-notes-002.pdf
 	rm -rf rodriguez4-notes.out
 	rm -rf rodriguez4-notes.tex
 	rm -rf rodriguez4-notes.aux

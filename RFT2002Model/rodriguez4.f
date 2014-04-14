@@ -30,7 +30,7 @@ c       end of first ischemis (ms)
         integer  isch1e
         integer kisch1e
 c       recovery type
-        character (LEN=*), PARAMETER :: rectype="instantaneous"
+        character (LEN=*), PARAMETER :: rectype="fullexpo"
 c********************************************************************
 
 c       minutes in dt units
@@ -660,6 +660,9 @@ c       during the stimulus
           iclock1(i,j) = 0
           istim(i,j) = S1
         endif
+
+c********************************************************************
+c       ischemia code
 c********************************************************************
         if (rectype == "instantaneous") then
             if (k.lt.(kisch1s)) then
@@ -671,17 +674,28 @@ c********************************************************************
      &               k.lt.(kisch1s+k14min).and.
      &               k.lt.(kisch1e)) then
 	        taudiff = 100e6
+
                 convtemp = (fatpfinal-0.0)/(14*60*1000)
                 if((fatpfactor + dt * convtemp).lt.fatpfinal) then
                     fatpfactor = fatpfactor + dt * convtemp
                 else
                     fatpfactor = fatpfinal
                 endif
-                convtemp = (dble(k)-kisch1s)/(k14min)
-c	        fatpfactor = convtemp * fatpfinal
-	        finhib = convtemp * finhibfinal
-	        vcleft = vcleftinitial- convtemp *
-     &                  (vcleftinitial-vcleftfinal)
+
+                convtemp = (finhibfinal-0.0)/(14*60*1000)
+                if((finhib + dt * convtemp).lt.finhibfinal) then
+                    finhib = finhib + dt * convtemp
+                else
+                    finhib = finhibfinal
+                endif
+
+                convtemp = (vcleftfinal-vcleftinitial)/(14*60*1000)
+                if((vcleft + dt * convtemp).gt.vcleftfinal) then
+                    vcleft = vcleft + dt * convtemp
+                else
+                    vcleft = vcleftfinal
+                endif
+
 	    else if (k.ge.(kisch1s+k14min).and.
      &               k.lt.(kisch1e)) then
 	        taudiff = 100e10
@@ -701,9 +715,12 @@ c	        fatpfactor = convtemp * fatpfinal
 	    else if (k.ge.(kisch1s+k2min).and.
      &               k.lt.(kisch1s+k14min).and.
      &               k.lt.(kisch1e)) then
-                convtemp = (dble(k)-(kisch1s+k2min))/
-     &                        ((kisch1s+k14min)-(kisch1s+k2min))
- 	        Inasfinal = convtemp * (-1.2)
+                convtemp = (-1.2 - 0.0) / (12*60*1000)
+                if((Inasfinal + dt * convtemp).gt.-1.2) then
+                    Inasfinal = Inasfinal + dt * convtemp
+                else
+                    Inasfinal = -1.2
+                endif
 	    else if (k.ge.(kisch1s+k14min).and.
      &               k.lt.(kisch1e)) then 
 	        Inasfinal = -1.2
@@ -711,9 +728,210 @@ c	        fatpfactor = convtemp * fatpfinal
                 Inasfinal = 0
  	    end if
 
-c        else if (rectype == "mirror") then
-        
-c        end if
+        else if (rectype == "mirror") then
+            if (k.lt.(kisch1s)) then
+	        taudiff = 1000
+	        fatpfactor = 0
+	        finhib = 0
+	        vcleft = vcleftinitial
+	    else if (k.ge.(kisch1s).and.
+     &               k.lt.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+	        taudiff = 100e6
+
+                convtemp = (fatpfinal-0.0)/(14*60*1000)
+                if((fatpfactor + dt * convtemp).lt.fatpfinal) then
+                    fatpfactor = fatpfactor + dt * convtemp
+                else
+                    fatpfactor = fatpfinal
+                endif
+
+                convtemp = (finhibfinal-0.0)/(14*60*1000)
+                if((finhib + dt * convtemp).lt.finhibfinal) then
+                    finhib = finhib + dt * convtemp
+                else
+                    finhib = finhibfinal
+                endif
+
+                convtemp = (vcleftfinal-vcleftinitial)/(14*60*1000)
+                if((vcleft + dt * convtemp).gt.vcleftfinal) then
+                    vcleft = vcleft + dt * convtemp
+                else
+                    vcleft = vcleftfinal
+                endif
+
+	    else if (k.ge.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+	        taudiff = 100e10
+	        fatpfactor = fatpfinal
+	        finhib = finhibfinal
+	        vcleft = vcleftfinal
+	    else if (k.ge.(kisch1e)) then 
+                if (k.lt.(min(2 * kisch1e - kisch1s, 14))) then 
+                    taudiff = 100e6
+                else 
+                    taudiff = 1000
+                end if
+
+                convtemp = -(fatpfinal-0.0)/(14*60*1000)
+                if((fatpfactor + dt * convtemp).gt.0.0) then
+                    fatpfactor = fatpfactor + dt * convtemp
+                else
+                    fatpfactor = 0.0
+                endif
+
+                convtemp = -(finhibfinal-0.0)/(14*60*1000)
+                if((finhib + dt * convtemp).gt.0.0) then
+                    finhib = finhib + dt * convtemp
+                else
+                    finhib = 0.0
+                endif
+
+                convtemp = -(vcleftfinal-vcleftinitial)/(14*60*1000)
+                if((vcleft + dt * convtemp).lt.vcleftinitial) then
+                    vcleft = vcleft + dt * convtemp
+                else
+                    vcleft = vcleftinitial
+                endif
+	    end if
+
+	    if (k.lt.(kisch1s+k2min).and.
+     &          k.lt.(kisch1e)) then
+	        Inasfinal = 0
+	    else if (k.ge.(kisch1s+k2min).and.
+     &               k.lt.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+                convtemp = (-1.2 - 0.0) / (12*60*1000)
+                if((Inasfinal + dt * convtemp).gt.-1.2) then
+                    Inasfinal = Inasfinal + dt * convtemp
+                else
+                    Inasfinal = -1.2
+                endif
+	    else if (k.ge.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then 
+	        Inasfinal = -1.2
+            else if (k.ge.(kisch1e)) then
+                convtemp = -(-1.2 - 0.0) / (12*60*1000)
+                if((Inasfinal + dt * convtemp).lt.0.0) then
+                    Inasfinal = Inasfinal + dt * convtemp
+                else
+                    Inasfinal = 0.0
+                endif
+ 	    end if
+        else if (rectype == "exponential") then
+            if (k.lt.(kisch1s)) then
+	        taudiff = 1000
+	        fatpfactor = 0
+	        finhib = 0
+	        vcleft = vcleftinitial
+	    else if (k.ge.(kisch1s).and.
+     &               k.lt.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+	        taudiff = 100e6
+
+                convtemp = (fatpfinal-0.0)/(14*60*1000)
+                if((fatpfactor + dt * convtemp).lt.fatpfinal) then
+                    fatpfactor = fatpfactor + dt * convtemp
+                else
+                    fatpfactor = fatpfinal
+                endif
+
+                convtemp = (finhibfinal-0.0)/(14*60*1000)
+                if((finhib + dt * convtemp).lt.finhibfinal) then
+                    finhib = finhib + dt * convtemp
+                else
+                    finhib = finhibfinal
+                endif
+
+                convtemp = (vcleftfinal-vcleftinitial)/(14*60*1000)
+                if((vcleft + dt * convtemp).gt.vcleftfinal) then
+                    vcleft = vcleft + dt * convtemp
+                else
+                    vcleft = vcleftfinal
+                endif
+
+	    else if (k.ge.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+	        taudiff = 100e10
+	        fatpfactor = fatpfinal
+	        finhib = finhibfinal
+	        vcleft = vcleftfinal
+	    else if (k.ge.(kisch1e)) then 
+                if (k.lt.(min(2 * kisch1e - kisch1s, 14))) then 
+                    taudiff = 100e6
+                else 
+                    taudiff = taudiff + dt * 2.5e-5 * (1000 - taudiff)
+                end if
+
+                fatpfactor = fatpfactor + dt*2.5e-5*(0.0 - fatpfactor) 
+                finhib = finhib + dt*2.5e-5*(0.0 - finhib)
+                vcleft = vcleft + dt*2.5e-5*(vcleftinitial - vcleft)
+	    end if
+
+	    if (k.lt.(kisch1s+k2min).and.
+     &          k.lt.(kisch1e)) then
+	        Inasfinal = 0
+	    else if (k.ge.(kisch1s+k2min).and.
+     &               k.lt.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+                convtemp = (-1.2 - 0.0) / (12*60*1000)
+                if((Inasfinal + dt * convtemp).gt.-1.2) then
+                    Inasfinal = Inasfinal + dt * convtemp
+                else
+                    Inasfinal = -1.2
+                endif
+	    else if (k.ge.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then 
+	        Inasfinal = -1.2
+            else if (k.ge.(kisch1e)) then
+                Inasfinal = Inasfinal + dt*2.5e-5*(0.0 - Inasfinal) 
+ 	    end if
+        else if (rectype == "fullexpo") then
+            if (k.lt.(kisch1s)) then
+	        taudiff = 1000
+	        fatpfactor = 0
+	        finhib = 0
+	        vcleft = vcleftinitial
+	    else if (k.ge.(kisch1s).and.
+     &               k.lt.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+
+                taudiff = taudiff + dt * 3.6e-6 * (100e6 - taudiff)
+                fatpfactor = fatpfactor + dt*3.6e-6*(fatpfinal -
+     &              fatpfactor) 
+                finhib = finhib + dt*3.6e-6*(finhibfinal - finhib)
+                vcleft = vcleft + dt*3.6e-6*(vcleftfinal - vcleft)
+
+	    else if (k.ge.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+	        taudiff = 100e10
+	    else if (k.ge.(kisch1e)) then 
+                if (k.gt.(min(2 * kisch1e - kisch1s, 14))) then 
+                    taudiff = taudiff + dt * 2.5e-5 * (1000 - taudiff)
+                else 
+                    taudiff = taudiff + dt * 2.5e-5 * (100e6 - taudiff)
+                end if
+
+                fatpfactor = fatpfactor + dt*2.5e-5*(0.0 - fatpfactor) 
+                finhib = finhib + dt*2.5e-5*(0.0 - finhib)
+                vcleft = vcleft + dt*2.5e-5*(vcleftinitial - vcleft)
+	    end if
+
+	    if (k.lt.(kisch1s+k2min).and.
+     &          k.lt.(kisch1e)) then
+	        Inasfinal = 0
+	    else if (k.ge.(kisch1s+k2min).and.
+     &               k.lt.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then
+                Inasfinal = Inasfinal + dt*3.6e-6*(-1.2 - Inasfinal) 
+
+	    else if (k.ge.(kisch1s+k14min).and.
+     &               k.lt.(kisch1e)) then 
+	        Inasfinal = -1.2
+            else if (k.ge.(kisch1e)) then
+                Inasfinal = Inasfinal + dt*2.5e-5*(0.0 - Inasfinal) 
+ 	    end if
+        end if
 
 c****************************************************************************
 c	Calculation of different Ionic currents in the sarcolemma

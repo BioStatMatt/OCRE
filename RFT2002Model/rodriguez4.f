@@ -19,18 +19,22 @@ c	Circ Res 1996;79:208-221
 c********************************************************************
 c       variables to be set by parameter file (TODO)
 c********************************************************************
+        namelist /control/ simname, simlen, isch1s, isch1e, pintvl,
+     &                     rectype
+c       simulation name (exactly 8 characters)
+        character*8 simname /"00000000"/        
 c       pacing interval (ms)
-        integer pintvl
+        integer pintvl /500/
 c       simulation length (ms)
-        integer simlen
+        integer simlen /1200000/
 c       start of first ischemia (ms)
-        integer  isch1s
+        integer  isch1s /30000/
         integer kisch1s
 c       end of first ischemis (ms)
-        integer  isch1e
+        integer  isch1e /360000/
         integer kisch1e
 c       recovery type
-        character (LEN=*), PARAMETER :: rectype="fullexpo"
+        character*8 rectype /"fullexpo"/
 c********************************************************************
 
 c       minutes in dt units
@@ -545,26 +549,30 @@ c
 c	Itr...   tranlocation current of Ca ions from NSR to JSR (mM/Lms)
 c	tautr... time const. of Ca transfer from NSR to JSR (ms)
 c*****************************************************************************		
+c       Read configuration parameters
+	open(42,file="rodriguez4.cfg")
+        read(42,nml=control)
+        close(42)
 
 c 	Time loop conditions
 c       simulation length: 20 min
-        simlen = 20 * 60 * 1000
+c       simlen = 20 * 60 * 1000
         idt = 100
 	dt  = 1./idt
 	nt  = simlen * idt
 	tstim = 10
 
 c       ischemia start and stop times (ms)
-        isch1s = 30 * 1000
+c       isch1s = 30 * 1000
         kisch1s = isch1s * idt
-        isch1e = 6 * 60 * 1000
+c       isch1e = 6 * 60 * 1000
         kisch1e = isch1e * idt
         k14min = 14 * 60 * 1000 * idt
         k2min  = 2  * 60 * 1000 * idt
 
 	is1s = 0
 	is1e = 500
-        pintvl = 500
+c       pintvl = 500
 
         S1     =  -14
         S2     =  500*0
@@ -619,16 +627,16 @@ c 	Initial Conditions
 	      iclock1(i,j) = 0
 	      	    
 c       output files
-        open(APDFILE,file='apd.csv',status='unknown')
+        open(APDFILE,file=simname//'-apd.csv',status='unknown')
         write(APDFILE, '(A15,A1,A15,A1,A15)') 'time_ms',sep,'APD_ms',
      &         sep,'dVdtMax_mVms'
 
-        open(IPAFILE,file='ipa.csv',status='unknown')
+        open(IPAFILE,file=simname//'-ipa.csv',status='unknown')
         write(IPAFILE, '(A15,A1,A15,A1,A15,A1,A15,A1,A15,A1,A15)')
      &          'time_ms',sep,'taudiff',sep,'fatpfactor',sep,
      &          'finhib',sep,'vcleft',sep,'inasfinal'
 
-c        open(VMFILE,file='vm.csv',status='unknown')
+c        open(VMFILE,file=simname//'-vm.csv',status='unknown')
 c        write(VMFILE, '(A15,A1,A15,A1,A15)') 'time_ms',sep,'voltage_mV',
 c     &         sep,'dVdt_mVms'
 
@@ -664,7 +672,7 @@ c       during the stimulus
 c********************************************************************
 c       ischemia code
 c********************************************************************
-        if (rectype == "instantaneous") then
+        if (rectype == "instant") then
             if (k.lt.(kisch1s)) then
 	        taudiff = 1000
 	        fatpfactor = 0
@@ -818,7 +826,7 @@ c********************************************************************
                     Inasfinal = 0.0
                 endif
  	    end if
-        else if (rectype == "exponential") then
+        else if (rectype == "exponent") then
             if (k.lt.(kisch1s)) then
 	        taudiff = 1000
 	        fatpfactor = 0

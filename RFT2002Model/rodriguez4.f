@@ -19,8 +19,8 @@ c	Circ Res 1996;79:208-221
 c********************************************************************
 c       variables to be set by parameter file (TODO)
 c********************************************************************
-        namelist /control/ simname, simlen, isch1s, isch1e, pintvl,
-     &                     rectype
+        namelist /control/ simname, simlen, isch1s, isch1e, isch2s,
+     &                     isch2e, pintvl, rectype
 c       simulation name (exactly 8 characters)
         character*8 simname /"00000000"/        
 c       pacing interval (ms)
@@ -33,8 +33,19 @@ c       start of first ischemia (ms)
 c       end of first ischemis (ms)
         integer  isch1e /360000/
         integer kisch1e
+c       start of second ischemia (ms)
+        integer  isch2s /1200000/
+        integer kisch2s
+c       end of second ischemis (ms)
+        integer  isch2e /1200000/
+        integer kisch2e
 c       recovery type
         character*8 rectype /"fullexpo"/
+c       ischemia active?
+        logical ischon
+c       length of current ischemia
+        integer ischtm
+        integer kischtm
 c********************************************************************
 
 c       minutes in dt units
@@ -211,8 +222,12 @@ c	is1s... starting time of first stimulus
 c	is1e... ending time of first stimulus
 c       pintvl... pacing interval (ms)
 c       simlen... simulation length (ms)
+c       ischon... whether ischemia is active
+c       ischtm... time ischemia is active
 c       isch1s... start of first ischemia (ms)
 c       isch1e... end of first ischemis (ms)
+c       isch2s... start of second ischemia (ms)
+c       isch2e... end of second ischemis (ms)
 c       rectype... recovery type
 
 c***********************************************************
@@ -565,10 +580,22 @@ c       simlen = 20 * 60 * 1000
 c       ischemia start and stop times (ms)
 c       isch1s = 30 * 1000
         kisch1s = isch1s * idt
+        kisch2s = isch2s * idt
+        ischon = .false.
+        ischtm = 0
+        kischtm = 0
 c       isch1e = 6 * 60 * 1000
         kisch1e = isch1e * idt
+        kisch2e = isch2e * idt
         k14min = 14 * 60 * 1000 * idt
         k2min  = 2  * 60 * 1000 * idt
+
+c       initial values
+        taudiff = 1000
+        fatpfactor = 0
+        finhib = 0
+        vcleft = vcleftinitial
+        Inasfinal = 0
 
 	is1s = 0
 	is1e = 500
@@ -672,16 +699,24 @@ c       during the stimulus
 c********************************************************************
 c       ischemia code
 c********************************************************************
+
+c       test whether ischemia currently active
+        if(((k.gt.kisch1s).and.(k.lt.kisch1e)).or.
+     &     ((k.gt.kisch2s).and.(k.lt.kisch2e))) then
+            if(.not.ischon) then
+                ischon = .true.
+                ischtm = 0
+                kischtm = 0
+            end if
+            ischtm = ischtm + dt
+            kischtm = kischtm + 1
+        else 
+            ischon = .false.
+        end if
+
         if (rectype == "instant") then
-            if (k.lt.(kisch1s)) then
-	        taudiff = 1000
-	        fatpfactor = 0
-	        finhib = 0
-	        vcleft = vcleftinitial
-	    else if (k.ge.(kisch1s).and.
-     &               k.lt.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
-	        taudiff = 100e6
+            if (ischon) then
+                taudiff = 100e6
 
                 convtemp = (fatpfinal-0.0)/(14*60*1000)
                 if((fatpfactor + dt * convtemp).lt.fatpfinal) then
@@ -704,47 +739,26 @@ c********************************************************************
                     vcleft = vcleftfinal
                 endif
 
-	    else if (k.ge.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
-	        taudiff = 100e10
-	        fatpfactor = fatpfinal
-	        finhib = finhibfinal
-	        vcleft = vcleftfinal
-	    else if (k.ge.(kisch1e)) then 
+	    else if (.not.ischon) then 
                 taudiff = 1000 
 	        fatpfactor = 0
 	        finhib = 0
 	        vcleft = vcleftinitial
 	    end if
 
-	    if (k.lt.(kisch1s+k2min).and.
-     &          k.lt.(kisch1e)) then
-	        Inasfinal = 0
-	    else if (k.ge.(kisch1s+k2min).and.
-     &               k.lt.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
+	    if (ischon.and.kischtm.ge.k2min) then
                 convtemp = (-1.2 - 0.0) / (12*60*1000)
                 if((Inasfinal + dt * convtemp).gt.-1.2) then
                     Inasfinal = Inasfinal + dt * convtemp
                 else
                     Inasfinal = -1.2
                 endif
-	    else if (k.ge.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then 
-	        Inasfinal = -1.2
-            else if (k.ge.(kisch1e)) then
+            else if (.not.ischon) then
                 Inasfinal = 0
  	    end if
 
         else if (rectype == "mirror") then
-            if (k.lt.(kisch1s)) then
-	        taudiff = 1000
-	        fatpfactor = 0
-	        finhib = 0
-	        vcleft = vcleftinitial
-	    else if (k.ge.(kisch1s).and.
-     &               k.lt.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
+            if (ischon) then
 	        taudiff = 100e6
 
                 convtemp = (fatpfinal-0.0)/(14*60*1000)
@@ -768,15 +782,11 @@ c********************************************************************
                     vcleft = vcleftfinal
                 endif
 
-	    else if (k.ge.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
-	        taudiff = 100e10
-	        fatpfactor = fatpfinal
-	        finhib = finhibfinal
-	        vcleft = vcleftfinal
-	    else if (k.ge.(kisch1e)) then 
-                if (k.lt.(min(2 * kisch1e - kisch1s, 14))) then 
+	    else if (.not.ischon) then 
+                if (kischtm > 0) then 
                     taudiff = 100e6
+                    kischtm = kischtm - 1
+                    ischtm = ischtm - dt
                 else 
                     taudiff = 1000
                 end if
@@ -803,22 +813,14 @@ c********************************************************************
                 endif
 	    end if
 
-	    if (k.lt.(kisch1s+k2min).and.
-     &          k.lt.(kisch1e)) then
-	        Inasfinal = 0
-	    else if (k.ge.(kisch1s+k2min).and.
-     &               k.lt.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
+	    if (ischon.and.kischtm.ge.k2min) then
                 convtemp = (-1.2 - 0.0) / (12*60*1000)
                 if((Inasfinal + dt * convtemp).gt.-1.2) then
                     Inasfinal = Inasfinal + dt * convtemp
                 else
                     Inasfinal = -1.2
                 endif
-	    else if (k.ge.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then 
-	        Inasfinal = -1.2
-            else if (k.ge.(kisch1e)) then
+            else if (.not.ischon) then
                 convtemp = -(-1.2 - 0.0) / (12*60*1000)
                 if((Inasfinal + dt * convtemp).lt.0.0) then
                     Inasfinal = Inasfinal + dt * convtemp
@@ -826,15 +828,9 @@ c********************************************************************
                     Inasfinal = 0.0
                 endif
  	    end if
+
         else if (rectype == "exponent") then
-            if (k.lt.(kisch1s)) then
-	        taudiff = 1000
-	        fatpfactor = 0
-	        finhib = 0
-	        vcleft = vcleftinitial
-	    else if (k.ge.(kisch1s).and.
-     &               k.lt.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
+            if (ischon) then
 	        taudiff = 100e6
 
                 convtemp = (fatpfinal-0.0)/(14*60*1000)
@@ -858,85 +854,41 @@ c********************************************************************
                     vcleft = vcleftfinal
                 endif
 
-	    else if (k.ge.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
-	        taudiff = 100e10
-	        fatpfactor = fatpfinal
-	        finhib = finhibfinal
-	        vcleft = vcleftfinal
-	    else if (k.ge.(kisch1e)) then 
-                if (k.lt.(min(2 * kisch1e - kisch1s, 14))) then 
-                    taudiff = 100e6
-                else 
-                    taudiff = taudiff + dt * 2.5e-5 * (1000 - taudiff)
-                end if
-
+	    else if (.not.ischon) then 
+                taudiff = taudiff + dt * 2.5e-5 * (1000 - taudiff)
                 fatpfactor = fatpfactor + dt*2.5e-5*(0.0 - fatpfactor) 
                 finhib = finhib + dt*2.5e-5*(0.0 - finhib)
                 vcleft = vcleft + dt*2.5e-5*(vcleftinitial - vcleft)
 	    end if
 
-	    if (k.lt.(kisch1s+k2min).and.
-     &          k.lt.(kisch1e)) then
-	        Inasfinal = 0
-	    else if (k.ge.(kisch1s+k2min).and.
-     &               k.lt.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
+	    if (ischon.and.kischtm.ge.k2min) then
                 convtemp = (-1.2 - 0.0) / (12*60*1000)
                 if((Inasfinal + dt * convtemp).gt.-1.2) then
                     Inasfinal = Inasfinal + dt * convtemp
                 else
                     Inasfinal = -1.2
                 endif
-	    else if (k.ge.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then 
-	        Inasfinal = -1.2
-            else if (k.ge.(kisch1e)) then
+            else if (.not.ischon) then
                 Inasfinal = Inasfinal + dt*2.5e-5*(0.0 - Inasfinal) 
  	    end if
-        else if (rectype == "fullexpo") then
-            if (k.lt.(kisch1s)) then
-	        taudiff = 1000
-	        fatpfactor = 0
-	        finhib = 0
-	        vcleft = vcleftinitial
-	    else if (k.ge.(kisch1s).and.
-     &               k.lt.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
 
+        else if (rectype == "fullexpo") then
+            if (ischon) then
                 taudiff = taudiff + dt * 3.6e-6 * (100e6 - taudiff)
                 fatpfactor = fatpfactor + dt*3.6e-6*(fatpfinal -
      &              fatpfactor) 
                 finhib = finhib + dt*3.6e-6*(finhibfinal - finhib)
                 vcleft = vcleft + dt*3.6e-6*(vcleftfinal - vcleft)
-
-	    else if (k.ge.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
-	        taudiff = 100e10
-	    else if (k.ge.(kisch1e)) then 
-                if (k.gt.(min(2 * kisch1e - kisch1s, 14))) then 
-                    taudiff = taudiff + dt * 2.5e-5 * (1000 - taudiff)
-                else 
-                    taudiff = taudiff + dt * 2.5e-5 * (100e6 - taudiff)
-                end if
-
+	    else if (.not.ischon) then 
+                taudiff = taudiff + dt * 2.5e-5 * (1000 - taudiff)
                 fatpfactor = fatpfactor + dt*2.5e-5*(0.0 - fatpfactor) 
                 finhib = finhib + dt*2.5e-5*(0.0 - finhib)
                 vcleft = vcleft + dt*2.5e-5*(vcleftinitial - vcleft)
 	    end if
 
-	    if (k.lt.(kisch1s+k2min).and.
-     &          k.lt.(kisch1e)) then
-	        Inasfinal = 0
-	    else if (k.ge.(kisch1s+k2min).and.
-     &               k.lt.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then
+	    if (ischon.and.kischtm.ge.k2min) then
                 Inasfinal = Inasfinal + dt*3.6e-6*(-1.2 - Inasfinal) 
-
-	    else if (k.ge.(kisch1s+k14min).and.
-     &               k.lt.(kisch1e)) then 
-	        Inasfinal = -1.2
-            else if (k.ge.(kisch1e)) then
+            else if (.not.ischon) then
                 Inasfinal = Inasfinal + dt*2.5e-5*(0.0 - Inasfinal) 
  	    end if
         end if

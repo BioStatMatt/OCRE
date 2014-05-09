@@ -61,14 +61,18 @@ plot(dat_ipa$time_ms/1000/60,
      ylab="inasfinal",
      type='s')
 
+library(signal)
 # APD is recordec every half second.
 # Hence, W=0.5
 bf <- butter(n=2, W=0.5, type="low") # 2Hz low pass filter
 dat_apd$time_ms <- ts(dat_apd$time_ms, start=0, frequency=2)
-plot(dat_apd$time_ms[-(1:10)]/1000/60,
-     filter(bf, dat_apd$APD_ms)[-(1:10)],
-     #dat_apd$APD_ms[-(1:10)],
+plot(dat_apd$time_ms/1000/60,
+     dat_apd$APD_ms,
      xlab="Time (min)",
      ylab=expression(APD[90]),
      type="l")
+lines(dat_apd$time_ms[-(1:10)]/1000/60,
+     filter(bf, dat_apd$APD_ms)[-(1:10)],
+     col="darkgreen")
+
 

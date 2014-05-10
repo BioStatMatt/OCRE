@@ -1063,7 +1063,9 @@ c 	Formulation of Ikatp proposed by Ferrero et al.
 
 	sigmakatp = 3.8
 	rhokatp   = 0.91
-	fatpfinal = 0.004
+	fatpfinal = 0.008
+	
+	gkatp(i,j) = gamakatp(i,j)*fmatp(i,j)*fnatp(i,j)*ft
 	
 	gamakatp(i,j) = 35.375*(ke(i,j)/5.4)**0.24
 
@@ -1073,10 +1075,12 @@ c 	Formulation of Ikatp proposed by Ferrero et al.
 	fnatp(i,j) = 1/(1 + (Nai(i,j)/khna(i,j))**2)
 	khna(i,j) = 25.9*exp((-0.35/RTF)*vm(i,j))
 
-	ft = 1.3**((Temp-309)/10)
-	gkatp(i,j) = gamakatp(i,j)*fmatp(i,j)*fnatp(i,j)*ft
+	ft = 1.3**(Temp-309)/10
 
-        fatp(i,j) = fatpfactor	
+	
+	kmatp(i,j) = (35.8 + 17.9*adp(i,j)**0.256)
+	hatp(i,j) = 1.3 + 0.74*exp(-0.09*adp(i,j))
+	fatp(i,j) =fatpfactor/(1 + (atp(i,j)/kmatp(i,j))**hatp(i,j))
 
 	ekatp(i,j) = RTF*log(ke(i,j)/ki(i,j))
 
@@ -1229,7 +1233,7 @@ c           write(6,*) ' dvdtmax now ',k*dt,i,j
 
            dcaitwo(i,j) = caitwo(i,j) - caizero(i,j)
 	
-	    iclock(i,j) = 2 
+	    iclock(i,j) = 0
 	
            If (dcaitwo(i,j).gt.dcaith) then
               grelcicrbar(i,j)= 60.

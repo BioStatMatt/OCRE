@@ -1,3 +1,5 @@
+
+./rodriguez4 <<EOF
 &control
    simname="standard",
    simlen=4320000,
@@ -8,3 +10,4 @@
    pintvl=500,
    rectype="fullexpo"
 /
+EOF

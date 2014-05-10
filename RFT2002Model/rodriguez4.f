@@ -564,10 +564,11 @@ c
 c	Itr...   tranlocation current of Ca ions from NSR to JSR (mM/Lms)
 c	tautr... time const. of Ca transfer from NSR to JSR (ms)
 c*****************************************************************************		
-c       Read configuration parameters
-	open(42,file="rodriguez4.cfg")
-        read(42,nml=control)
-        close(42)
+c       Read configuration parameter file from STDIN
+c       open(42,file="rodriguez4.cfg")
+c       read(42,nml=control)
+        read(*, nml=control)
+c       close(42)
 
 c 	Time loop conditions
 c       simulation length: 20 min

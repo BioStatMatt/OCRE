@@ -31,11 +31,16 @@ wlpf <- function( y, t, f ) {
   return(Re(fy))
 }
 
-plot_ipa_apd <- function(pfx="standard", W=0.5) {
-  dat_ipa <- read.csv(paste0(pfx,"-ipa.csv"))
-  dat_apd <- read.csv(paste0(pfx,"-apd.csv"))
-  layout(matrix(1:6,3,2,byrow=TRUE))
-  par(mar = c(4.1,4.1,1.1,2.1))
+plot_ipa_apd <- function(pfx="standard", W=0.5,
+                         lat=matrix(1:6,3,2,byrow=TRUE),
+                         mar=c(4.1,4.1,1.1,2.1),
+                         add=FALSE) {
+  dat_ipa <- read.csv(xzfile(paste0(pfx,"-ipa.csv.xz")))
+  dat_apd <- read.csv(xzfile(paste0(pfx,"-apd.csv.xz")))
+  if(add==FALSE) {
+    layout(lat)
+    par(mar = mar)
+  }
   plot(dat_ipa$time_ms/1000/60,
        log10(dat_ipa$taudiff), 
        xlab="Time (min)",
@@ -61,19 +66,24 @@ plot_ipa_apd <- function(pfx="standard", W=0.5) {
        xlab="Time (min)",
        ylab="inasfinal",
        type='s')
-  
-  library(signal)
-  # APD is recordec every half second.
-  # Hence, W=0.5
-  bf <- butter(n=2, W=W, type="low") # 2Hz low pass filter
   dat_apd$time_ms <- ts(dat_apd$time_ms, start=0, frequency=2)
-  plot(dat_apd$time_ms/1000/60,
-       dat_apd$APD_ms,
+  plot(dat_apd$time_ms[-(1:10)]/1000/60,
+       dat_apd$APD_ms[-(1:10)],
        xlab="Time (min)",
        ylab=expression(APD[90]),
        type="l")
-  lines(dat_apd$time_ms[-(1:10)]/1000/60,
-       filter(bf, dat_apd$APD_ms)[-(1:10)],
-       col="darkgreen")
+  if(W) {
+    library(signal)
+    # APD is recordec every half second.
+    # Hence, W=0.5
+    bf <- butter(n=2, W=W, type="low") # 2Hz low pass filter
+    lines(dat_apd$time_ms[-(1:10)]/1000/60,
+          filter(bf, dat_apd$APD_ms)[-(1:10)],
+          col="darkgreen")
+  }
 }
+
+#pdf(file="standard.pdf")
+#plot_ipa_apd("standard")
+#dev.off()
 

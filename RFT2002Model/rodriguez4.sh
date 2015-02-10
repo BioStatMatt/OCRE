@@ -1,4 +1,4 @@
-
+date > standard.out
 ./rodriguez4 <<EOF
 &control
    simname="standard",
@@ -11,3 +11,7 @@
    rectype="fullexpo"
 /
 EOF
+date >> standard.out
+R CMD BATCH plot-apd-ipa.R
+cat plot-apd-ipa.Rout >> standard.out
+mutt -s "Job Complete" -a standard.pdf -- matt.shotwell@vanderbilt.edu < standard.out
